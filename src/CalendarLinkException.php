@@ -3,7 +3,7 @@
 namespace Drupal\calendar_link;
 
 /**
- * Class CalendarLinkException.
+ * Exception for calendar link classes.
  *
  * @package Drupal\calendar_link
  */

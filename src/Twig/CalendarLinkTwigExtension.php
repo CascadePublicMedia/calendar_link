@@ -9,7 +9,7 @@ use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Link;
 
 /**
- * Class CalendarLinkTwigExtension.
+ * Twig extensions class for the `calendar_link` and `calender_links` functions.
  *
  * @package Drupal\calendar_link\Twig
  */
@@ -70,7 +70,7 @@ class CalendarLinkTwigExtension extends \Twig_Extension {
    */
   public function calendarLink($type, $title, $from, $to, $all_day = FALSE, $description = '', $address = '') {
     if (!isset(self::$types[$type])) {
-      throw new CalendarLinkException($this->t('Invalid calendar link type.'));
+      throw new CalendarLinkException('Invalid calendar link type.');
     }
 
     try {
@@ -84,7 +84,7 @@ class CalendarLinkTwigExtension extends \Twig_Extension {
       $link = Link::create($title, $from, $to, $all_day);
     }
     catch (InvalidLink $e) {
-      throw new CalendarLinkException($this->t('Invalid calendar link data.'));
+      throw new CalendarLinkException('Invalid calendar link data.');
     }
 
     if ($description) {
