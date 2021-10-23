@@ -1,5 +1,5 @@
 name: Calendar Link
 type: module
 description: Provides Twig functions for generating "add to calendar" links.
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^8.8 || ^9
 package: Content Display
