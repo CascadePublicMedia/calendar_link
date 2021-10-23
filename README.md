@@ -115,6 +115,7 @@ Or, to create a list of links for each service:
        class="calendar-link-{{ link.type_key }}">{{ link.type_name }}</a>
   </li>
 {% endfor %}
+</ul>
 ```
 
 

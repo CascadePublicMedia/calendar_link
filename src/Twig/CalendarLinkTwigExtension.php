@@ -7,13 +7,15 @@ use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Link;
+use Twig\Extension\AbstractExtension;
+use Twig\TwigFunction;
 
 /**
  * Twig extensions class for the `calendar_link` and `calender_links` functions.
  *
  * @package Drupal\calendar_link\Twig
  */
-class CalendarLinkTwigExtension extends \Twig_Extension {
+class CalendarLinkTwigExtension extends AbstractExtension {
   use StringTranslationTrait;
 
   /**
@@ -23,7 +25,7 @@ class CalendarLinkTwigExtension extends \Twig_Extension {
    *
    * @see \Spatie\CalendarLinks\Link
    */
-  protected static $types = [
+  protected static array $types = [
     'google' => 'Google',
     'ics' => 'iCal',
     'yahoo' => 'Yahoo!',
@@ -33,18 +35,11 @@ class CalendarLinkTwigExtension extends \Twig_Extension {
   /**
    * {@inheritdoc}
    */
-  public function getFunctions() {
+  public function getFunctions(): array {
     return [
-      new \Twig_SimpleFunction('calendar_link', [$this, 'calendarLink']),
-      new \Twig_SimpleFunction('calendar_links', [$this, 'calendarLinks']),
+      new TwigFunction('calendar_link', [$this, 'calendarLink']),
+      new TwigFunction('calendar_links', [$this, 'calendarLinks']),
     ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getName() {
-    return 'calendar_link';
   }
 
   /**
@@ -68,7 +63,7 @@ class CalendarLinkTwigExtension extends \Twig_Extension {
    * @return string
    *   URL for the specific calendar type.
    */
-  public function calendarLink($type, $title, $from, $to, $all_day = FALSE, $description = '', $address = '') {
+  public function calendarLink($type, $title, $from, $to, $all_day = FALSE, $description = '', $address = ''): string {
     if (!isset(self::$types[$type])) {
       throw new CalendarLinkException('Invalid calendar link type.');
     }
@@ -119,7 +114,7 @@ class CalendarLinkTwigExtension extends \Twig_Extension {
    *   - type_name: Human-readable name for the calendar type.
    *   - url: URL for the specific calendar type.
    */
-  public function calendarLinks($title, $from, $to, $all_day = FALSE, $description = '', $address = '') {
+  public function calendarLinks($title, $from, $to, $all_day = FALSE, $description = '', $address = ''): array {
     $links = [];
 
     foreach (self::$types as $type => $name) {
