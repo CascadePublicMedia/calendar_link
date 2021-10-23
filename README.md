@@ -85,12 +85,12 @@ Google calendar:
 
 ```twig
 {% set link = calendar_link('google', 
-  node.title.value,
-  node.field_start.date,
-  node.field_end.date,
-  node.field_all_day.value,
-  node.body.value,
-  node.field_location.value
+  node.title,
+  node.field_start,
+  node.field_end,
+  node.field_all_day,
+  node.body,
+  node.field_location
 )
 %}
 <a href="{{ link }}">Add to Google</a>
@@ -100,12 +100,12 @@ Or, to create a list of links for each service:
 
 ```twig
 {% set links = calendar_links(
-  node.title.value,
-  node.field_start.date,
-  node.field_end.date,
-  node.field_all_day.value,
-  node.body.value,
-  node.field_location.value
+  node.title,
+  node.field_start,
+  node.field_end,
+  node.field_all_day,
+  node.body,
+  node.field_location
 )
 %}
 <ul>

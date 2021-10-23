@@ -4,7 +4,9 @@ namespace Drupal\calendar_link\Twig;
 
 use Drupal\calendar_link\CalendarLinkException;
 use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\datetime\Plugin\Field\FieldType\DateTimeFieldItemList;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Link;
 use Twig\Extension\AbstractExtension;
@@ -45,57 +47,50 @@ class CalendarLinkTwigExtension extends AbstractExtension {
   /**
    * Create a calendar link.
    *
+   * All data parameters accept multiple types of data and will attempt to get
+   * the relevant information from e.g. field instances or content arrays.
+   *
    * @param string $type
    *   Generator key to use for link building.
-   * @param string $title
+   * @param mixed $title
    *   Calendar entry title.
-   * @param \Drupal\Core\Datetime\DrupalDateTime|\DateTime $from
+   * @param mixed $from
    *   Calendar entry start date and time.
-   * @param \Drupal\Core\Datetime\DrupalDateTime|\DateTime $to
+   * @param mixed $to
    *   Calendar entry end date and time.
-   * @param bool $all_day
+   * @param mixed $all_day
    *   Indicator for an "all day" calendar entry.
-   * @param string $description
+   * @param mixed $description
    *   Calendar entry description.
-   * @param string $address
+   * @param mixed $address
    *   Calendar entry address.
    *
    * @return string
    *   URL for the specific calendar type.
    */
-  public function calendarLink(
-    string $type,
-    string $title,
-    $from,
-    $to,
-    bool $all_day = FALSE,
-    string $description = '',
-    string $address = ''
-  ): string {
+  public function calendarLink(string $type, $title, $from, $to, $all_day = FALSE, $description = '', $address = ''): string {
     if (!isset(self::$types[$type])) {
       throw new CalendarLinkException('Invalid calendar link type.');
     }
 
     try {
-      if ($from instanceof DrupalDateTime) {
-        $from = $from->getPhpDateTime();
-      }
-      if ($to instanceof DrupalDateTime) {
-        $to = $to->getPhpDateTime();
-      }
-
-      $link = Link::create($title, $from, $to, $all_day);
+      $link = Link::create(
+        $this->getString($title),
+        $this->getDateTime($from),
+        $this->getDateTime($to),
+        $this->getBoolean($all_day)
+      );
     }
     catch (InvalidLink $e) {
       throw new CalendarLinkException('Invalid calendar link data.');
     }
 
     if ($description) {
-      $link->description($description);
+      $link->description($this->getString($description));
     }
 
     if ($address) {
-      $link->address($address);
+      $link->address($this->getString($address));
     }
 
     return $link->{$type}();
@@ -104,32 +99,32 @@ class CalendarLinkTwigExtension extends AbstractExtension {
   /**
    * Create links for all calendar types.
    *
-   * @param string $title
+   * All parameters accept multiple types of data and will attempt to get the
+   * relevant information from e.g. field instances or content arrays.
+   *
+   * @param mixed $title
    *   Calendar entry title.
-   * @param \Drupal\Core\Datetime\DrupalDateTime|\DateTime $from
-   *   Calendar entry start date and time.
-   * @param \Drupal\Core\Datetime\DrupalDateTime|\DateTime $to
-   *   Calendar entry end date and time.
-   * @param bool $all_day
+   * @param mixed $from
+   *   Calendar entry start date and time. This value can be various DateTime
+   *   types, a content field array, or a field.
+   * @param mixed $to
+   *   Calendar entry end date and time. This value can be various DateTime
+   *   types, a content field array, or a field.
+   * @param mixed $all_day
    *   Indicator for an "all day" calendar entry.
-   * @param string $description
+   * @param mixed $description
    *   Calendar entry description.
-   * @param string $address
+   * @param mixed $address
    *   Calendar entry address.
    *
    * @return array
    *   - type_key: Machine key for the calendar type.
    *   - type_name: Human-readable name for the calendar type.
    *   - url: URL for the specific calendar type.
+   *
+   * @see \Drupal\calendar_link\Twig\CalendarLinkTwigExtension::calendarLink()
    */
-  public function calendarLinks(
-    string $title,
-    $from,
-    $to,
-    bool $all_day = FALSE,
-    string $description = '',
-    string $address = ''
-  ): array {
+  public function calendarLinks($title, $from, $to, $all_day = FALSE, $description = '', $address = ''): array {
     $links = [];
 
     foreach (self::$types as $type => $name) {
@@ -141,6 +136,94 @@ class CalendarLinkTwigExtension extends AbstractExtension {
     }
 
     return $links;
+  }
+
+  /**
+   * Gets a boolean value from various types of input.
+   *
+   * @param mixed $data
+   *   A value with a boolean value.
+   *
+   * @return bool
+   *   Boolean from data.
+   *
+   * @throws \Drupal\calendar_link\CalendarLinkException
+   */
+  private function getBoolean($data): bool {
+    if (is_bool($data)) {
+      return $data;
+    }
+
+    try {
+      $data = $this->getString($data);
+      return (bool) $data;
+    }
+    catch (CalendarLinkException $e) {
+      throw new CalendarLinkException('Could not get valid boolean from input.');
+    }
+  }
+
+  /**
+   * Gets a string value from various types of input.
+   *
+   * @param mixed $data
+   *   A value with a string.
+   *
+   * @return string
+   *   String from data.
+   *
+   * @throws \Drupal\calendar_link\CalendarLinkException
+   */
+  private function getString($data): string {
+    // Content field array. E.g. `label`.
+    if (is_array($data) && isset($data['#items'])) {
+      $data = $data['#items'];
+    }
+
+    // Drupal field instance. E.g. `node.title`.
+    if ($data instanceof FieldItemListInterface) {
+      $data = $data->getString();
+    }
+
+    if (is_string($data)) {
+      return $data;
+    }
+
+    throw new CalendarLinkException('Could not get valid string from input.');
+  }
+
+  /**
+   * Gets a PHP \DateTime instance from various types of input.
+   *
+   * @param mixed $date
+   *   A value with \DateTime data.
+   *
+   * @return \DateTime
+   *   The \DateTime instance.
+   *
+   * @throws \Drupal\calendar_link\CalendarLinkException
+   */
+  private function getDateTime($date): \DateTime {
+    // Content field array. E.g. `content.field_start`.
+    if (is_array($date) && isset($date['#items'])) {
+      $date = $date['#items'];
+    }
+
+    // Drupal field instance. E.g. `node.field_start`.
+    if ($date instanceof DateTimeFieldItemList) {
+      $date = $date->date;
+    }
+
+    // Drupal date time. E.g. `node.field_start.date`.
+    if ($date instanceof DrupalDateTime) {
+      $date = $date->getPhpDateTime();
+    }
+
+    if ($date instanceof \DateTime) {
+      return $date;
+    }
+
+    throw new CalendarLinkException('Could not get valid \DateTime object from input.');
   }
 
 }
