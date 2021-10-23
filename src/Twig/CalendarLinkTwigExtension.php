@@ -25,7 +25,7 @@ class CalendarLinkTwigExtension extends AbstractExtension {
    *
    * @see \Spatie\CalendarLinks\Link
    */
-  protected static array $types = [
+  protected static $types = [
     'google' => 'Google',
     'ics' => 'iCal',
     'yahoo' => 'Yahoo!',
@@ -63,7 +63,15 @@ class CalendarLinkTwigExtension extends AbstractExtension {
    * @return string
    *   URL for the specific calendar type.
    */
-  public function calendarLink($type, $title, $from, $to, $all_day = FALSE, $description = '', $address = ''): string {
+  public function calendarLink(
+    string $type,
+    string $title,
+    $from,
+    $to,
+    bool $all_day = FALSE,
+    string $description = '',
+    string $address = ''
+  ): string {
     if (!isset(self::$types[$type])) {
       throw new CalendarLinkException('Invalid calendar link type.');
     }
@@ -114,7 +122,14 @@ class CalendarLinkTwigExtension extends AbstractExtension {
    *   - type_name: Human-readable name for the calendar type.
    *   - url: URL for the specific calendar type.
    */
-  public function calendarLinks($title, $from, $to, $all_day = FALSE, $description = '', $address = ''): array {
+  public function calendarLinks(
+    string $title,
+    $from,
+    $to,
+    bool $all_day = FALSE,
+    string $description = '',
+    string $address = ''
+  ): array {
     $links = [];
 
     foreach (self::$types as $type => $name) {
