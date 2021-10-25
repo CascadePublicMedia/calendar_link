@@ -10,6 +10,7 @@ use Drupal\datetime\Plugin\Field\FieldType\DateTimeFieldItemList;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Link;
 use Twig\Extension\AbstractExtension;
+use Twig\Markup;
 use Twig\TwigFunction;
 
 /**
@@ -176,13 +177,24 @@ class CalendarLinkTwigExtension extends AbstractExtension {
    */
   private function getString($data): string {
     // Content field array. E.g. `label`.
-    if (is_array($data) && isset($data['#items'])) {
-      $data = $data['#items'];
+    if (is_array($data)) {
+      if (isset($data['#items'])) {
+        $data = $data['#items'];
+      }
+      else {
+        // If not "#items" key is present the field is empty.
+        return '';
+      }
     }
 
     // Drupal field instance. E.g. `node.title`.
     if ($data instanceof FieldItemListInterface) {
       $data = $data->getString();
+    }
+
+    // Twig markup content. E.g. content from a Twig `{% set %}` block.
+    if ($data instanceof Markup) {
+      $data = (string) $data;
     }
 
     if (is_string($data)) {
