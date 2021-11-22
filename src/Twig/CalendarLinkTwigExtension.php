@@ -3,6 +3,7 @@
 namespace Drupal\calendar_link\Twig;
 
 use Drupal\calendar_link\CalendarLinkException;
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -194,6 +195,10 @@ class CalendarLinkTwigExtension extends AbstractExtension {
 
     // Twig markup content. E.g. content from a Twig `{% set %}` block.
     if ($data instanceof Markup) {
+      $data = (string) $data;
+    }
+
+    if ($data instanceof MarkupInterface) {
       $data = (string) $data;
     }
 
